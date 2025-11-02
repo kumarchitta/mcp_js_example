@@ -137,6 +137,11 @@ curl -X POST http://localhost:8080/mcp \
   }'
 ```
 
+## MCP Inspector
+```bash
+  npx @modelcontextprotocol/inspector
+```
+
 ## Architecture
 
 ```

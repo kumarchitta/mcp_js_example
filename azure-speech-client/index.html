@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Azure Speech SDK - STT and Echo TTS</title>
+</head>
+<body>
+  <h2>🎙️ Azure Speech SDK: Speak and Hear It Back</h2>
+
+  <div>
+    <label>Speech Key: </label>
+    <input id="speechKeyInput" type="text" placeholder="Enter your Azure Speech key" size="40">
+  </div>
+  <div>
+    <label>Service Region: </label>
+    <input id="serviceRegionInput" type="text" placeholder="e.g. eastus" size="20">
+  </div>
+  <br>
+  <button id="startBtn">Start Speaking</button>
+  <p><strong>Recognized text:</strong> <span id="outputText"></span></p>
+
+  <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+  <script>
+    document.getElementById("startBtn").onclick = async () => {
+      const speechKey = document.getElementById("speechKeyInput").value.trim();
+      const serviceRegion = document.getElementById("serviceRegionInput").value.trim();
+
+      if (!speechKey || !serviceRegion) {
+        alert("Please enter both Speech Key and Service Region.");
+        return;
+      }
+
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(speechKey, serviceRegion);
+      speechConfig.speechRecognitionLanguage = "en-US";
+
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+      const recognizer = new SpeechSDK.SpeechRecognizer(speechConfig, audioConfig);
+
+      document.getElementById("outputText").textContent = "Listening...";
+      console.log("Listening...");
+
+      recognizer.recognizeOnceAsync(result => {
+        if (result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+          const text = result.text;
+          document.getElementById("outputText").textContent = text;
+          console.log("Recognized:", text);
+          playText(text, speechKey, serviceRegion);
+        } else {
+          console.error("Speech recognition failed:", result.errorDetails);
+          document.getElementById("outputText").textContent = "Recognition failed.";
+        }
+        recognizer.close();
+      });
+    };
+
+    function playText(text, speechKey, serviceRegion) {
+      const speechConfig = SpeechSDK.SpeechConfig.fromSubscription(speechKey, serviceRegion);
+      speechConfig.speechSynthesisVoiceName = "en-US-JennyNeural";
+
+      const audioConfig = SpeechSDK.AudioConfig.fromDefaultSpeakerOutput();
+      const synthesizer = new SpeechSDK.SpeechSynthesizer(speechConfig, audioConfig);
+
+      synthesizer.speakTextAsync(
+        text,
+        result => {
+          console.log("Spoken:", text);
+          synthesizer.close();
+        },
+        error => {
+          console.error(error);
+          synthesizer.close();
+        }
+      );
+    }
+  </script>
+</body>
+</html>
